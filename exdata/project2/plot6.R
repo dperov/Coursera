@@ -7,26 +7,33 @@
 NEI <- readRDS("summarySCC_PM25.rds")
 SCC <- readRDS("Source_Classification_Code.rds")
 
-
 sccSet <- subset(SCC, grepl("Vehicle", EI.Sector))
 
+data <- subset(NEI, (fips == "24510" | fips == "06037" ) & NEI$SCC %in% sccSet$SCC)
 
-baltimorData <- subset(NEI, fips == "24510" & NEI$SCC %in% sccSet$SCC)
-laData <- subset(NEI, fips == "06037" & NEI$SCC %in% sccSet$SCC)
+# summarizing emissions by year and region
+summaryData <- xtabs(Emissions~year+fips,data=data)
+#laSummary <- xtabs(Emissions~year,data=laData)
+
+# convert xtabs object into dataset
+df <- as.data.frame(summaryData)
+
+# convert year from categorical to numerical
+df$year <- as.numeric(as.character(df$year))
+
+# create location columns based on fips value
+df$location <- ifelse(df$fips == "24510", "Baltimore", "LA")
 
 
-baltimorSummary <- xtabs(Emissions~year,data=baltimorData)
-laSummary <- xtabs(Emissions~year,data=laData)
+# plotting
+library(ggplot2)
 
+png(file="plot6.png")
 
-plot(as.numeric(names(baltimorSummary)), baltimorSummary, type = "l", 
-     ylab = "Emission", xlab = "Year", col = "red", ylim = c(0, 5000))
+qplot(year, Freq, data = df, color = location) + geom_line() +
+  ggtitle("Emissions from motor vehicle sources\n in Baltimore City and Los Angeles County 1999-2008")  +
+  ylab("Amount of PM2.5 emitted, in tons") +
+  xlab("Year")
 
-lines(as.numeric(names(laSummary)), laSummary, col="green")
+dev.off()
 
-
-
-
-legend("topright", col = c("red", "green"), 
-       legend = c("Baltimor", "Los Angeles County"), 
-       lty = 1)

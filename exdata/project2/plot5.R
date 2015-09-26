@@ -6,15 +6,28 @@
 NEI <- readRDS("summarySCC_PM25.rds")
 SCC <- readRDS("Source_Classification_Code.rds")
 
+# find emission source categories related to emissions from motor vehicle 
+sccSet <- subset(SCC, grepl("Vehicle", EI.Sector))$SCC
 
-sccSet <- subset(SCC, grepl("Vehicle", EI.Sector))
-
-vehicleSources <- NEI[NEI$SCC %in% sccSet$SCC,]
-
+vehicleSources <- NEI[NEI$SCC %in% sccSet,]
 
 summaryData <- xtabs(Emissions~year,data=vehicleSources)
 
-plot(as.numeric(names(summaryData)), summaryData, type = "n", 
-     ylab = "Emission", xlab = "Year")
+# convert xtabs object into dataset
+df <- as.data.frame(summaryData)
 
-lines(as.numeric(names(summaryData)), summaryData, col="black")
+# convert year from categorical to numerical
+df$year <- as.numeric(as.character(df$year))
+
+library(ggplot2)
+
+png(file="plot5.png")
+
+
+qplot(year, Freq, data = df) + geom_line() +
+  ggtitle("Emissions from motor vehicle sources in Baltimore City 1999–2008")  +
+  ylab("Amount of PM2.5 emitted, in tons") +
+  xlab("Year")
+
+
+dev.off()
