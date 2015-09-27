@@ -9,11 +9,11 @@ SCC <- readRDS("Source_Classification_Code.rds")
 # find emission source categories related to emissions from motor vehicle 
 sccSet <- subset(SCC, grepl("Vehicle", EI.Sector))$SCC
 
-vehicleSources <- NEI[NEI$SCC %in% sccSet,]
+vehicleSources <- subset(NEI, fips == "24510" & SCC %in% sccSet)
 
-summaryData <- xtabs(Emissions~year,data=vehicleSources)
+summaryData <- xtabs(Emissions ~ year, data = vehicleSources)
 
-# convert xtabs object into dataset
+# convert xtabs object into dataframe
 df <- as.data.frame(summaryData)
 
 # convert year from categorical to numerical
